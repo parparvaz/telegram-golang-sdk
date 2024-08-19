@@ -3,6 +3,7 @@ package telegram
 import (
 	"bytes"
 	"context"
+	"crypto/tls"
 	"fmt"
 	"io"
 	"log"
@@ -12,7 +13,6 @@ import (
 	"reflect"
 	"telegram/common"
 
-	"github.com/bitly/go-simplejson"
 	jsoniter "github.com/json-iterator/go"
 )
 
@@ -36,13 +36,33 @@ func NewClient(token, secretKey string) *Client {
 		BaseURL:    baseAPIMainURL + token,
 		HTTPClient: http.DefaultClient,
 		Logger:     log.New(os.Stderr, "Telegram-golang ", log.LstdFlags),
-		Debug:      true,
 	}
 }
 
-const (
-	baseAPIMainURL = "https://api.telegram.org/bot"
-)
+func NewProxyClient(token, secretKey, proxyUrl string) *Client {
+	proxy, err := url.Parse(proxyUrl)
+	if err != nil {
+		log.Println(err)
+
+		return nil
+	}
+	tr := &http.Transport{
+		Proxy:           http.ProxyURL(proxy),
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	}
+	return &Client{
+		Token:     token,
+		SecretKey: secretKey,
+		UserAgent: "Telegram/Golang",
+		BaseURL:   baseAPIMainURL + token,
+		HTTPClient: &http.Client{
+			Transport: tr,
+		},
+		Logger: log.New(os.Stderr, "Ghasedak-golang ", log.LstdFlags),
+	}
+}
+
+const baseAPIMainURL = "https://api.telegram.org/bot"
 
 type doFunc func(req *http.Request) (*http.Response, error)
 
@@ -162,58 +182,112 @@ func (c *Client) parseRequest(r *request, opts ...RequestOption) (err error) {
 	return nil
 }
 
-func newJSON(data []byte) (j *simplejson.Json, err error) {
-	j, err = simplejson.NewJson(data)
-	if err != nil {
-		return nil, err
-	}
-	return j, nil
-}
-
 var json = jsoniter.ConfigCompatibleWithStandardLibrary
 
 func (c *Client) NewSendMessageService() *SendMessageService {
 	return &SendMessageService{c: c}
 }
-
-func (c *Client) NewGetMeService() *GetMeService {
-	return &GetMeService{c: c}
-}
-
-func (c *Client) NewLogOutService() *LogOutService {
-	return &LogOutService{c: c}
-}
-
-func (c *Client) NewCloseService() *CloseService {
-	return &CloseService{c: c}
-}
-
 func (c *Client) NewAnswerCallbackQueryService() *AnswerCallbackQueryService {
 	return &AnswerCallbackQueryService{c: c}
 }
-
 func (c *Client) NewEditMessageReplyMarkupService() *EditMessageReplyMarkupService {
 	return &EditMessageReplyMarkupService{c: c}
 }
-
 func (c *Client) NewEditMessageTextService() *EditMessageTextService {
 	return &EditMessageTextService{c: c}
 }
-
 func (c *Client) NewDeleteMessageService() *DeleteMessageService {
 	return &DeleteMessageService{c: c}
 }
-
 func (c *Client) NewSetWebhookService() *SetWebhookService {
 	return &SetWebhookService{c: c}
 }
-
 func (c *Client) NewDeleteWebhookService() *DeleteWebhookService {
 	return &DeleteWebhookService{c: c}
 }
-
 func (c *Client) NewGetWebhookInfoService() *GetWebhookInfoService {
 	return &GetWebhookInfoService{c: c}
+}
+func (c *Client) NewForwardMessageService() *ForwardMessageService {
+	return &ForwardMessageService{c: c}
+}
+func (c *Client) NewCopyMessageService() *CopyMessageService {
+	return &CopyMessageService{c: c}
+}
+func (c *Client) NewSendPhotoService() *SendPhotoService {
+	return &SendPhotoService{c: c}
+}
+func (c *Client) NewSendAudioService() *SendAudioService {
+	return &SendAudioService{c: c}
+}
+func (c *Client) NewSendDocumentService() *SendDocumentService {
+	return &SendDocumentService{c: c}
+}
+func (c *Client) NewSendVideoService() *SendVideoService {
+	return &SendVideoService{c: c}
+}
+func (c *Client) NewSendAnimationService() *SendAnimationService {
+	return &SendAnimationService{c: c}
+}
+func (c *Client) NewSendVoiceService() *SendVoiceService {
+	return &SendVoiceService{c: c}
+}
+func (c *Client) NewSendVideoNoteService() *SendVideoNoteService {
+	return &SendVideoNoteService{c: c}
+}
+func (c *Client) NewSendMediaGroupService() *SendMediaGroupService {
+	return &SendMediaGroupService{c: c}
+}
+func (c *Client) NewSendLocationService() *SendLocationService {
+	return &SendLocationService{c: c}
+}
+func (c *Client) NewSendVenueService() *SendVenueService {
+	return &SendVenueService{c: c}
+}
+func (c *Client) NewSendContactService() *SendContactService {
+	return &SendContactService{c: c}
+}
+func (c *Client) NewSendPollService() *SendPollService {
+	return &SendPollService{c: c}
+}
+func (c *Client) NewSendDiceService() *SendDiceService {
+	return &SendDiceService{c: c}
+}
+func (c *Client) NewSendChatActionService() *SendChatActionService {
+	return &SendChatActionService{c: c}
+}
+func (c *Client) NewGetMeService() *GetMeService {
+	return &GetMeService{c: c}
+}
+func (c *Client) NewLogOutService() *LogOutService {
+	return &LogOutService{c: c}
+}
+func (c *Client) NewCloseService() *CloseService {
+	return &CloseService{c: c}
+}
+func (c *Client) NewSetMyNameService() *SetMyNameService {
+	return &SetMyNameService{c: c}
+}
+func (c *Client) NewGetMyNameService() *GetMyNameService {
+	return &GetMyNameService{c: c}
+}
+func (c *Client) NewSetMyDescriptionService() *SetMyDescriptionService {
+	return &SetMyDescriptionService{c: c}
+}
+func (c *Client) NewGetMyDescriptionService() *GetMyDescriptionService {
+	return &GetMyDescriptionService{c: c}
+}
+func (c *Client) NewSetMyShortDescriptionService() *SetMyShortDescriptionService {
+	return &SetMyShortDescriptionService{c: c}
+}
+func (c *Client) NewGetMyShortDescriptionService() *GetMyShortDescriptionService {
+	return &GetMyShortDescriptionService{c: c}
+}
+func (c *Client) NewGetFileService() *GetFileService {
+	return &GetFileService{c: c}
+}
+func (c *Client) NewGetUserProfilePhotosService() *GetUserProfilePhotosService {
+	return &GetUserProfilePhotosService{c: c}
 }
 
 const (
