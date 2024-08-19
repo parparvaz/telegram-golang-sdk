@@ -3,6 +3,7 @@ package telegram
 import (
 	"context"
 	"net/http"
+	"telegram/common"
 )
 
 type GetFileService struct {
