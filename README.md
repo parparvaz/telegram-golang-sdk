@@ -21,90 +21,58 @@ This command will install the library in your Go project.
 
 ## Usage
 
-### 1. Simple Message Sending
+###  . Simple Message Sending
+
 ```go
 package main
 
 import (
-    "github.com/parparvaz/telegram-golang-sdk"
+	"context"
+	"github.com/parparvaz/telegram-golang-sdk"
+	"log"
 )
 
 func main() {
-    client := telegram.NewClient("YOUR_BOT_TOKEN")
-    chatID := "CHAT_ID"
-    message := "Hello! This is a test message."
-    
-    client.SendMessage(chatID, message)
+	client := telegram.NewClient("YOUR_BOT_TOKEN", "YOUR_SECRET")
+	chatID := "CHAT_ID"
+	message := "Hello! This is a test message."
+
+	res, err := client.NewSendMessageService().
+		Text(chatID).
+		ChatID(message).
+		Do(context.Background())
+	if err != nil {
+		log.Println(err)
+		panic(1)
+	}
+	log.Println(res)
+	
 }
 ```
 
-### 2. Sending Message with Inline Buttons
+###  . Setting Up a Webhook
+
 ```go
 package main
 
 import (
-    "github.com/parparvaz/telegram-golang-sdk"
+	"context"
+	"github.com/gin-gonic/gin"
+	"github.com/parparvaz/telegram-golang-sdk"
 )
 
 func main() {
-    client := telegram.NewClient("YOUR_BOT_TOKEN")
-    chatID := "CHAT_ID"
-    
-    buttons := [][]telegram.InlineKeyboardButton{
-        {
-            {Text: "Button 1", CallbackData: "callback_1"},
-            {Text: "Button 2", CallbackData: "callback_2"},
-        },
-    }
-    keyboard := telegram.InlineKeyboardMarkup{InlineKeyboard: buttons}
-    
-    client.SendMessageWithKeyboard(chatID, "Please choose one of the buttons:", keyboard)
-}
-```
+	client := telegram.NewClient("YOUR_BOT_TOKEN", "")
 
-### 3. Sending a Photo
-```go
-package main
-
-import (
-    "github.com/parparvaz/telegram-golang-sdk"
-)
-
-func main() {
-    client := telegram.NewClient("YOUR_BOT_TOKEN")
-    chatID := "CHAT_ID"
-    photoURL := "https://example.com/photo.jpg"
-    
-    client.SendPhoto(chatID, photoURL, "This is a test photo.")
-}
-```
-
-### 4. Setting Up a Webhook
-```go
-package main
-
-import (
-    "github.com/gin-gonic/gin"
-    "github.com/parparvaz/telegram-golang-sdk"
-)
-
-func main() {
-    client := telegram.NewClient("YOUR_BOT_TOKEN")
-    r := gin.Default()
-    
-    r.POST("/webhook", func(c *gin.Context) {
-        update := telegram.Update{}
-        if err := c.ShouldBindJSON(&update); err == nil {
-            if update.Message != nil {
-                chatID := update.Message.Chat.ID
-                client.SendMessage(chatID, "Your message has been received!")
-            }
-        }
-        c.Status(200)
-    })
-    
-    client.SetWebhook("https://yourdomain.com/webhook")
-    r.Run(":8080")
+	r := gin.Default()
+	r.POST("/webhook", func(c *gin.Context) {
+		c.Status(200)
+	})
+	client.NewSetWebhookService().
+		URL("https://yourdomain.com/webhook").
+		SecretToken("YOUR_SECRET").
+		Do(context.Background())
+	r.Run(":8080")
 }
 ```
 
